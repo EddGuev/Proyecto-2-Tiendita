@@ -1,7 +1,6 @@
 __pycache__/
 *.pyc
 *.log
-.abacus.donotdelete
 *.html
 !frontend/index.html
 reporte_*.html
