@@ -7,11 +7,11 @@ Gestión de transacciones concurrentes, resolución de condiciones de carrera co
 ```
 Proyecto-2-Tiendita/
 ├── backend/
-│   └── main.py
+│   └── main.py          # API con FastAPI y lógica del inventario
 ├── frontend/
-│   ├── index.html
-│   └── app.js
-└── locust.py
+│   ├── index.html       # Interfaz del cliente
+│   └── app.js           # Consumo de la API con fetch
+└── locust.py            # Escenario de carga para la venta relámpago
 ```
 
 ## Inventario (simulación en memoria)
@@ -65,3 +65,8 @@ locust -f locust.py --host http://127.0.0.1:8000
 ```
 
 Interfaz web en http://127.0.0.1:8089
+
+## Experimentos de carga
+
+- **Escenario A (sin lock):** comentar temporalmente `async with lock:` dentro de `comprarProducto`, reiniciar la API y correr Locust con 100 usuarios durante 20 segundos. En este caso se observa sobreventa y el stock puede terminar en negativo.
+- **Escenario B (con lock):** restaurar `async with lock:`, reiniciar la API y repetir la misma carga. Con el candado activo, el stock del producto 3 se detiene en 0 y solo la primera compra resulta exitosa.

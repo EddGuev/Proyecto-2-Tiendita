@@ -22,6 +22,7 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
+# Candado global para evitar que dos compras modifiquen el mismo stock al mismo tiempo
 lock = asyncio.Lock()
 
 
@@ -41,7 +42,8 @@ class respuestaProducto(BaseModel):
     cantidad: int
 
 
-#Datos cargados (Simulación)
+# Datos cargados (simulación en memoria)
+# El producto 3 arranca con stock=1 para probar la venta relámpago en alta concurrencia
 inventario = [
     {"id": 1, "nombre": "Galletas Maria", "precio": 12, "cantidad": 30},
     {"id": 2, "nombre": "Fanta", "precio": 18, "cantidad": 25},
@@ -169,11 +171,12 @@ def deleteProducto(producto_id: int):
 @app.post("/productos/{producto_id}")
 async def comprarProducto(producto_id: int):
     try:
+        # Sección crítica: aquí se valida y descuenta stock de forma atómica
         async with lock:
             for objeto in inventario:
                 if objeto["id"] == producto_id:
                     if objeto["cantidad"] > 0:
-                        await asyncio.sleep(0.05)
+                        await asyncio.sleep(0.05)  # Simula latencia de una operación real
                         objeto["cantidad"] = objeto["cantidad"] - 1
                         return {"Mensaje": "Producto comprado"}
                     else:
@@ -188,6 +191,7 @@ async def comprarProducto(producto_id: int):
             )
 
     except HTTPException:
+        # Mantiene el código HTTP de negocio (404/400) sin transformarlo a 500
         raise
     except Exception as error:
         raise HTTPException(
